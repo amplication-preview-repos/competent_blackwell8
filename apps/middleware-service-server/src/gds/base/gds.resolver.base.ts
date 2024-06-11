@@ -13,16 +13,34 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { Gds } from "./Gds";
 import { GdsCountArgs } from "./GdsCountArgs";
 import { GdsFindManyArgs } from "./GdsFindManyArgs";
 import { GdsFindUniqueArgs } from "./GdsFindUniqueArgs";
+import { CreateGdsArgs } from "./CreateGdsArgs";
+import { UpdateGdsArgs } from "./UpdateGdsArgs";
 import { DeleteGdsArgs } from "./DeleteGdsArgs";
 import { GdsService } from "../gds.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => Gds)
 export class GdsResolverBase {
-  constructor(protected readonly service: GdsService) {}
+  constructor(
+    protected readonly service: GdsService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "read",
+    possession: "any",
+  })
   async _gdsItemsMeta(
     @graphql.Args() args: GdsCountArgs
   ): Promise<MetaQueryPayload> {
@@ -32,12 +50,24 @@ export class GdsResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [Gds])
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "read",
+    possession: "any",
+  })
   async gdsItems(@graphql.Args() args: GdsFindManyArgs): Promise<Gds[]> {
     return this.service.gdsItems(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => Gds, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "read",
+    possession: "own",
+  })
   async gds(@graphql.Args() args: GdsFindUniqueArgs): Promise<Gds | null> {
     const result = await this.service.gds(args);
     if (result === null) {
@@ -46,7 +76,49 @@ export class GdsResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Gds)
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "create",
+    possession: "any",
+  })
+  async createGds(@graphql.Args() args: CreateGdsArgs): Promise<Gds> {
+    return await this.service.createGds({
+      ...args,
+      data: args.data,
+    });
+  }
+
+  @common.UseInterceptors(AclValidateRequestInterceptor)
+  @graphql.Mutation(() => Gds)
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "update",
+    possession: "any",
+  })
+  async updateGds(@graphql.Args() args: UpdateGdsArgs): Promise<Gds | null> {
+    try {
+      return await this.service.updateGds({
+        ...args,
+        data: args.data,
+      });
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new GraphQLError(
+          `No resource was found for ${JSON.stringify(args.where)}`
+        );
+      }
+      throw error;
+    }
+  }
+
+  @graphql.Mutation(() => Gds)
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "delete",
+    possession: "any",
+  })
   async deleteGds(@graphql.Args() args: DeleteGdsArgs): Promise<Gds | null> {
     try {
       return await this.service.deleteGds(args);

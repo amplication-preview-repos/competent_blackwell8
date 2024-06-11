@@ -17,6 +17,10 @@ import { GdsList } from "./gds/GdsList";
 import { GdsCreate } from "./gds/GdsCreate";
 import { GdsEdit } from "./gds/GdsEdit";
 import { GdsShow } from "./gds/GdsShow";
+import { UserList } from "./user/UserList";
+import { UserCreate } from "./user/UserCreate";
+import { UserEdit } from "./user/UserEdit";
+import { UserShow } from "./user/UserShow";
 import { jwtAuthProvider } from "./auth-provider/ra-auth-jwt";
 
 const App = (): React.ReactElement => {
@@ -63,6 +67,13 @@ const App = (): React.ReactElement => {
           edit={GdsEdit}
           create={GdsCreate}
           show={GdsShow}
+        />
+        <Resource
+          name="User"
+          list={UserList}
+          edit={UserEdit}
+          create={UserCreate}
+          show={UserShow}
         />
       </Admin>
     </div>

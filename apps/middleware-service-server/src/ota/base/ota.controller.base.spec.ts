@@ -18,25 +18,37 @@ import { OtaService } from "../ota.service";
 const nonExistingId = "nonExistingId";
 const existingId = "existingId";
 const CREATE_INPUT = {
+  apiKey: "exampleApiKey",
   createdAt: new Date(),
+  endpoint: "exampleEndpoint",
   id: "exampleId",
+  name: "exampleName",
   updatedAt: new Date(),
 };
 const CREATE_RESULT = {
+  apiKey: "exampleApiKey",
   createdAt: new Date(),
+  endpoint: "exampleEndpoint",
   id: "exampleId",
+  name: "exampleName",
   updatedAt: new Date(),
 };
 const FIND_MANY_RESULT = [
   {
+    apiKey: "exampleApiKey",
     createdAt: new Date(),
+    endpoint: "exampleEndpoint",
     id: "exampleId",
+    name: "exampleName",
     updatedAt: new Date(),
   },
 ];
 const FIND_ONE_RESULT = {
+  apiKey: "exampleApiKey",
   createdAt: new Date(),
+  endpoint: "exampleEndpoint",
   id: "exampleId",
+  name: "exampleName",
   updatedAt: new Date(),
 };
 

@@ -16,52 +16,97 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { GdsService } from "../gds.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { GdsCreateInput } from "./GdsCreateInput";
 import { Gds } from "./Gds";
 import { GdsFindManyArgs } from "./GdsFindManyArgs";
 import { GdsWhereUniqueInput } from "./GdsWhereUniqueInput";
 import { GdsUpdateInput } from "./GdsUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class GdsControllerBase {
-  constructor(protected readonly service: GdsService) {}
+  constructor(
+    protected readonly service: GdsService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Gds })
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createGds(@common.Body() data: GdsCreateInput): Promise<Gds> {
     return await this.service.createGds({
       data: data,
       select: {
+        apiKey: true,
         createdAt: true,
+        endpoint: true,
         id: true,
+        name: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Gds] })
   @ApiNestedQuery(GdsFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async gdsItems(@common.Req() request: Request): Promise<Gds[]> {
     const args = plainToClass(GdsFindManyArgs, request.query);
     return this.service.gdsItems({
       ...args,
       select: {
+        apiKey: true,
         createdAt: true,
+        endpoint: true,
         id: true,
+        name: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Gds })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async gds(@common.Param() params: GdsWhereUniqueInput): Promise<Gds | null> {
     const result = await this.service.gds({
       where: params,
       select: {
+        apiKey: true,
         createdAt: true,
+        endpoint: true,
         id: true,
+        name: true,
         updatedAt: true,
       },
     });
@@ -73,9 +118,18 @@ export class GdsControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Gds })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateGds(
     @common.Param() params: GdsWhereUniqueInput,
     @common.Body() data: GdsUpdateInput
@@ -85,8 +139,11 @@ export class GdsControllerBase {
         where: params,
         data: data,
         select: {
+          apiKey: true,
           createdAt: true,
+          endpoint: true,
           id: true,
+          name: true,
           updatedAt: true,
         },
       });
@@ -103,6 +160,14 @@ export class GdsControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Gds })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Gds",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteGds(
     @common.Param() params: GdsWhereUniqueInput
   ): Promise<Gds | null> {
@@ -110,8 +175,11 @@ export class GdsControllerBase {
       return await this.service.deleteGds({
         where: params,
         select: {
+          apiKey: true,
           createdAt: true,
+          endpoint: true,
           id: true,
+          name: true,
           updatedAt: true,
         },
       });

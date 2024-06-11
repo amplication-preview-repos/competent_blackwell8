@@ -13,16 +13,34 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { Ota } from "./Ota";
 import { OtaCountArgs } from "./OtaCountArgs";
 import { OtaFindManyArgs } from "./OtaFindManyArgs";
 import { OtaFindUniqueArgs } from "./OtaFindUniqueArgs";
+import { CreateOtaArgs } from "./CreateOtaArgs";
+import { UpdateOtaArgs } from "./UpdateOtaArgs";
 import { DeleteOtaArgs } from "./DeleteOtaArgs";
 import { OtaService } from "../ota.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => Ota)
 export class OtaResolverBase {
-  constructor(protected readonly service: OtaService) {}
+  constructor(
+    protected readonly service: OtaService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "Ota",
+    action: "read",
+    possession: "any",
+  })
   async _otasMeta(
     @graphql.Args() args: OtaCountArgs
   ): Promise<MetaQueryPayload> {
@@ -32,12 +50,24 @@ export class OtaResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [Ota])
+  @nestAccessControl.UseRoles({
+    resource: "Ota",
+    action: "read",
+    possession: "any",
+  })
   async otas(@graphql.Args() args: OtaFindManyArgs): Promise<Ota[]> {
     return this.service.otas(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => Ota, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "Ota",
+    action: "read",
+    possession: "own",
+  })
   async ota(@graphql.Args() args: OtaFindUniqueArgs): Promise<Ota | null> {
     const result = await this.service.ota(args);
     if (result === null) {
@@ -46,7 +76,49 @@ export class OtaResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Ota)
+  @nestAccessControl.UseRoles({
+    resource: "Ota",
+    action: "create",
+    possession: "any",
+  })
+  async createOta(@graphql.Args() args: CreateOtaArgs): Promise<Ota> {
+    return await this.service.createOta({
+      ...args,
+      data: args.data,
+    });
+  }
+
+  @common.UseInterceptors(AclValidateRequestInterceptor)
+  @graphql.Mutation(() => Ota)
+  @nestAccessControl.UseRoles({
+    resource: "Ota",
+    action: "update",
+    possession: "any",
+  })
+  async updateOta(@graphql.Args() args: UpdateOtaArgs): Promise<Ota | null> {
+    try {
+      return await this.service.updateOta({
+        ...args,
+        data: args.data,
+      });
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new GraphQLError(
+          `No resource was found for ${JSON.stringify(args.where)}`
+        );
+      }
+      throw error;
+    }
+  }
+
+  @graphql.Mutation(() => Ota)
+  @nestAccessControl.UseRoles({
+    resource: "Ota",
+    action: "delete",
+    possession: "any",
+  })
   async deleteOta(@graphql.Args() args: DeleteOtaArgs): Promise<Ota | null> {
     try {
       return await this.service.deleteOta(args);

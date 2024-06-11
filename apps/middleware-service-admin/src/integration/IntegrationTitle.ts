@@ -1,7 +1,7 @@
 import { Integration as TIntegration } from "../api/integration/Integration";
 
-export const INTEGRATION_TITLE_FIELD = "id";
+export const INTEGRATION_TITLE_FIELD = "name";
 
 export const IntegrationTitle = (record: TIntegration): string => {
-  return record.id?.toString() || String(record.id);
+  return record.name?.toString() || String(record.id);
 };

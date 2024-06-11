@@ -13,7 +13,10 @@ export const IntegrationList = (props: ListProps): React.ReactElement => {
     >
       <Datagrid rowClick="show">
         <DateField source="createdAt" label="Created At" />
+        <TextField label="credentials" source="credentials" />
         <TextField label="ID" source="id" />
+        <TextField label="name" source="name" />
+        <TextField label="type" source="typeField" />
         <DateField source="updatedAt" label="Updated At" />
       </Datagrid>
     </List>

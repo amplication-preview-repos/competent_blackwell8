@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { IntegrationService } from "../integration.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { IntegrationCreateInput } from "./IntegrationCreateInput";
 import { Integration } from "./Integration";
 import { IntegrationFindManyArgs } from "./IntegrationFindManyArgs";
 import { IntegrationWhereUniqueInput } from "./IntegrationWhereUniqueInput";
 import { IntegrationUpdateInput } from "./IntegrationUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class IntegrationControllerBase {
-  constructor(protected readonly service: IntegrationService) {}
+  constructor(
+    protected readonly service: IntegrationService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Integration })
+  @nestAccessControl.UseRoles({
+    resource: "Integration",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createIntegration(
     @common.Body() data: IntegrationCreateInput
   ): Promise<Integration> {
@@ -34,30 +52,54 @@ export class IntegrationControllerBase {
       data: data,
       select: {
         createdAt: true,
+        credentials: true,
         id: true,
+        name: true,
+        typeField: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Integration] })
   @ApiNestedQuery(IntegrationFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Integration",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async integrations(@common.Req() request: Request): Promise<Integration[]> {
     const args = plainToClass(IntegrationFindManyArgs, request.query);
     return this.service.integrations({
       ...args,
       select: {
         createdAt: true,
+        credentials: true,
         id: true,
+        name: true,
+        typeField: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Integration })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Integration",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async integration(
     @common.Param() params: IntegrationWhereUniqueInput
   ): Promise<Integration | null> {
@@ -65,7 +107,10 @@ export class IntegrationControllerBase {
       where: params,
       select: {
         createdAt: true,
+        credentials: true,
         id: true,
+        name: true,
+        typeField: true,
         updatedAt: true,
       },
     });
@@ -77,9 +122,18 @@ export class IntegrationControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Integration })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Integration",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateIntegration(
     @common.Param() params: IntegrationWhereUniqueInput,
     @common.Body() data: IntegrationUpdateInput
@@ -90,7 +144,10 @@ export class IntegrationControllerBase {
         data: data,
         select: {
           createdAt: true,
+          credentials: true,
           id: true,
+          name: true,
+          typeField: true,
           updatedAt: true,
         },
       });
@@ -107,6 +164,14 @@ export class IntegrationControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Integration })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Integration",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteIntegration(
     @common.Param() params: IntegrationWhereUniqueInput
   ): Promise<Integration | null> {
@@ -115,7 +180,10 @@ export class IntegrationControllerBase {
         where: params,
         select: {
           createdAt: true,
+          credentials: true,
           id: true,
+          name: true,
+          typeField: true,
           updatedAt: true,
         },
       });
