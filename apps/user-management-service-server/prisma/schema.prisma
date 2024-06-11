@@ -7,15 +7,19 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model Role {
+  createdAt   DateTime @default(now())
+  description String?
+  id          String   @id @default(cuid())
+  name        String?
+  updatedAt   DateTime @updatedAt
+}
+
 model Tenant {
   createdAt DateTime @default(now())
   id        String   @id @default(cuid())
-  updatedAt DateTime @updatedAt
-}
-
-model Role {
-  createdAt DateTime @default(now())
-  id        String   @id @default(cuid())
+  name      String?
+  tenantId  String?
   updatedAt DateTime @updatedAt
 }
 

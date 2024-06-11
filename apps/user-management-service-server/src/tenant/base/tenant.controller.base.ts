@@ -16,31 +16,60 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { TenantService } from "../tenant.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { TenantCreateInput } from "./TenantCreateInput";
 import { Tenant } from "./Tenant";
 import { TenantFindManyArgs } from "./TenantFindManyArgs";
 import { TenantWhereUniqueInput } from "./TenantWhereUniqueInput";
 import { TenantUpdateInput } from "./TenantUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class TenantControllerBase {
-  constructor(protected readonly service: TenantService) {}
+  constructor(
+    protected readonly service: TenantService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Tenant })
+  @nestAccessControl.UseRoles({
+    resource: "Tenant",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createTenant(@common.Body() data: TenantCreateInput): Promise<Tenant> {
     return await this.service.createTenant({
       data: data,
       select: {
         createdAt: true,
         id: true,
+        name: true,
+        tenantId: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Tenant] })
   @ApiNestedQuery(TenantFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Tenant",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async tenants(@common.Req() request: Request): Promise<Tenant[]> {
     const args = plainToClass(TenantFindManyArgs, request.query);
     return this.service.tenants({
@@ -48,14 +77,25 @@ export class TenantControllerBase {
       select: {
         createdAt: true,
         id: true,
+        name: true,
+        tenantId: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Tenant })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Tenant",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async tenant(
     @common.Param() params: TenantWhereUniqueInput
   ): Promise<Tenant | null> {
@@ -64,6 +104,8 @@ export class TenantControllerBase {
       select: {
         createdAt: true,
         id: true,
+        name: true,
+        tenantId: true,
         updatedAt: true,
       },
     });
@@ -75,9 +117,18 @@ export class TenantControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Tenant })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Tenant",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateTenant(
     @common.Param() params: TenantWhereUniqueInput,
     @common.Body() data: TenantUpdateInput
@@ -89,6 +140,8 @@ export class TenantControllerBase {
         select: {
           createdAt: true,
           id: true,
+          name: true,
+          tenantId: true,
           updatedAt: true,
         },
       });
@@ -105,6 +158,14 @@ export class TenantControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Tenant })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Tenant",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteTenant(
     @common.Param() params: TenantWhereUniqueInput
   ): Promise<Tenant | null> {
@@ -114,6 +175,8 @@ export class TenantControllerBase {
         select: {
           createdAt: true,
           id: true,
+          name: true,
+          tenantId: true,
           updatedAt: true,
         },
       });
