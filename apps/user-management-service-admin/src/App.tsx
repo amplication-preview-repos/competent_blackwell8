@@ -5,6 +5,18 @@ import { theme } from "./theme/theme";
 import Login from "./Login";
 import "./App.scss";
 import Dashboard from "./pages/Dashboard";
+import { TenantList } from "./tenant/TenantList";
+import { TenantCreate } from "./tenant/TenantCreate";
+import { TenantEdit } from "./tenant/TenantEdit";
+import { TenantShow } from "./tenant/TenantShow";
+import { RoleList } from "./role/RoleList";
+import { RoleCreate } from "./role/RoleCreate";
+import { RoleEdit } from "./role/RoleEdit";
+import { RoleShow } from "./role/RoleShow";
+import { UserList } from "./user/UserList";
+import { UserCreate } from "./user/UserCreate";
+import { UserEdit } from "./user/UserEdit";
+import { UserShow } from "./user/UserShow";
 import { jwtAuthProvider } from "./auth-provider/ra-auth-jwt";
 
 const App = (): React.ReactElement => {
@@ -30,7 +42,29 @@ const App = (): React.ReactElement => {
         theme={theme}
         dashboard={Dashboard}
         loginPage={Login}
-      ></Admin>
+      >
+        <Resource
+          name="Tenant"
+          list={TenantList}
+          edit={TenantEdit}
+          create={TenantCreate}
+          show={TenantShow}
+        />
+        <Resource
+          name="Role"
+          list={RoleList}
+          edit={RoleEdit}
+          create={RoleCreate}
+          show={RoleShow}
+        />
+        <Resource
+          name="User"
+          list={UserList}
+          edit={UserEdit}
+          create={UserCreate}
+          show={UserShow}
+        />
+      </Admin>
     </div>
   );
 };
