@@ -1,4 +1,7 @@
 import { Module } from "@nestjs/common";
+import { RatePlanModule } from "./ratePlan/ratePlan.module";
+import { PromotionModule } from "./promotion/promotion.module";
+import { DiscountModule } from "./discount/discount.module";
 import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { SecretsManagerModule } from "./providers/secrets/secretsManager.module";
@@ -11,6 +14,9 @@ import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 @Module({
   controllers: [],
   imports: [
+    RatePlanModule,
+    PromotionModule,
+    DiscountModule,
     HealthModule,
     PrismaModule,
     SecretsManagerModule,

@@ -5,6 +5,18 @@ import { theme } from "./theme/theme";
 import Login from "./Login";
 import "./App.scss";
 import Dashboard from "./pages/Dashboard";
+import { RatePlanList } from "./ratePlan/RatePlanList";
+import { RatePlanCreate } from "./ratePlan/RatePlanCreate";
+import { RatePlanEdit } from "./ratePlan/RatePlanEdit";
+import { RatePlanShow } from "./ratePlan/RatePlanShow";
+import { PromotionList } from "./promotion/PromotionList";
+import { PromotionCreate } from "./promotion/PromotionCreate";
+import { PromotionEdit } from "./promotion/PromotionEdit";
+import { PromotionShow } from "./promotion/PromotionShow";
+import { DiscountList } from "./discount/DiscountList";
+import { DiscountCreate } from "./discount/DiscountCreate";
+import { DiscountEdit } from "./discount/DiscountEdit";
+import { DiscountShow } from "./discount/DiscountShow";
 import { jwtAuthProvider } from "./auth-provider/ra-auth-jwt";
 
 const App = (): React.ReactElement => {
@@ -30,7 +42,29 @@ const App = (): React.ReactElement => {
         theme={theme}
         dashboard={Dashboard}
         loginPage={Login}
-      ></Admin>
+      >
+        <Resource
+          name="RatePlan"
+          list={RatePlanList}
+          edit={RatePlanEdit}
+          create={RatePlanCreate}
+          show={RatePlanShow}
+        />
+        <Resource
+          name="Promotion"
+          list={PromotionList}
+          edit={PromotionEdit}
+          create={PromotionCreate}
+          show={PromotionShow}
+        />
+        <Resource
+          name="Discount"
+          list={DiscountList}
+          edit={DiscountEdit}
+          create={DiscountCreate}
+          show={DiscountShow}
+        />
+      </Admin>
     </div>
   );
 };
