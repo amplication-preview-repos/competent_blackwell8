@@ -1,4 +1,7 @@
 import { Module } from "@nestjs/common";
+import { OtaModule } from "./ota/ota.module";
+import { IntegrationModule } from "./integration/integration.module";
+import { GdsModule } from "./gds/gds.module";
 import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { SecretsManagerModule } from "./providers/secrets/secretsManager.module";
@@ -11,6 +14,9 @@ import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 @Module({
   controllers: [],
   imports: [
+    OtaModule,
+    IntegrationModule,
+    GdsModule,
     HealthModule,
     PrismaModule,
     SecretsManagerModule,

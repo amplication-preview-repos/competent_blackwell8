@@ -5,6 +5,18 @@ import { theme } from "./theme/theme";
 import Login from "./Login";
 import "./App.scss";
 import Dashboard from "./pages/Dashboard";
+import { OtaList } from "./ota/OtaList";
+import { OtaCreate } from "./ota/OtaCreate";
+import { OtaEdit } from "./ota/OtaEdit";
+import { OtaShow } from "./ota/OtaShow";
+import { IntegrationList } from "./integration/IntegrationList";
+import { IntegrationCreate } from "./integration/IntegrationCreate";
+import { IntegrationEdit } from "./integration/IntegrationEdit";
+import { IntegrationShow } from "./integration/IntegrationShow";
+import { GdsList } from "./gds/GdsList";
+import { GdsCreate } from "./gds/GdsCreate";
+import { GdsEdit } from "./gds/GdsEdit";
+import { GdsShow } from "./gds/GdsShow";
 import { jwtAuthProvider } from "./auth-provider/ra-auth-jwt";
 
 const App = (): React.ReactElement => {
@@ -30,7 +42,29 @@ const App = (): React.ReactElement => {
         theme={theme}
         dashboard={Dashboard}
         loginPage={Login}
-      ></Admin>
+      >
+        <Resource
+          name="Ota"
+          list={OtaList}
+          edit={OtaEdit}
+          create={OtaCreate}
+          show={OtaShow}
+        />
+        <Resource
+          name="Integration"
+          list={IntegrationList}
+          edit={IntegrationEdit}
+          create={IntegrationCreate}
+          show={IntegrationShow}
+        />
+        <Resource
+          name="Gds"
+          list={GdsList}
+          edit={GdsEdit}
+          create={GdsCreate}
+          show={GdsShow}
+        />
+      </Admin>
     </div>
   );
 };

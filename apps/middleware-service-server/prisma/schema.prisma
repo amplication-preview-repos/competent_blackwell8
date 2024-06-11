@@ -6,3 +6,21 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
+model Ota {
+  createdAt DateTime @default(now())
+  id        String   @id @default(cuid())
+  updatedAt DateTime @updatedAt
+}
+
+model Integration {
+  createdAt DateTime @default(now())
+  id        String   @id @default(cuid())
+  updatedAt DateTime @updatedAt
+}
+
+model Gds {
+  createdAt DateTime @default(now())
+  id        String   @id @default(cuid())
+  updatedAt DateTime @updatedAt
+}
