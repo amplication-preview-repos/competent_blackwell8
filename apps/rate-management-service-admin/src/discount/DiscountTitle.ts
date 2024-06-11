@@ -1,7 +1,7 @@
 import { Discount as TDiscount } from "../api/discount/Discount";
 
-export const DISCOUNT_TITLE_FIELD = "id";
+export const DISCOUNT_TITLE_FIELD = "name";
 
 export const DiscountTitle = (record: TDiscount): string => {
-  return record.id?.toString() || String(record.id);
+  return record.name?.toString() || String(record.id);
 };

@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { RatePlanService } from "../ratePlan.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { RatePlanCreateInput } from "./RatePlanCreateInput";
 import { RatePlan } from "./RatePlan";
 import { RatePlanFindManyArgs } from "./RatePlanFindManyArgs";
 import { RatePlanWhereUniqueInput } from "./RatePlanWhereUniqueInput";
 import { RatePlanUpdateInput } from "./RatePlanUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class RatePlanControllerBase {
-  constructor(protected readonly service: RatePlanService) {}
+  constructor(
+    protected readonly service: RatePlanService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: RatePlan })
+  @nestAccessControl.UseRoles({
+    resource: "RatePlan",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createRatePlan(
     @common.Body() data: RatePlanCreateInput
   ): Promise<RatePlan> {
@@ -34,30 +52,54 @@ export class RatePlanControllerBase {
       data: data,
       select: {
         createdAt: true,
+        description: true,
         id: true,
+        name: true,
+        price: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [RatePlan] })
   @ApiNestedQuery(RatePlanFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "RatePlan",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async ratePlans(@common.Req() request: Request): Promise<RatePlan[]> {
     const args = plainToClass(RatePlanFindManyArgs, request.query);
     return this.service.ratePlans({
       ...args,
       select: {
         createdAt: true,
+        description: true,
         id: true,
+        name: true,
+        price: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: RatePlan })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RatePlan",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async ratePlan(
     @common.Param() params: RatePlanWhereUniqueInput
   ): Promise<RatePlan | null> {
@@ -65,7 +107,10 @@ export class RatePlanControllerBase {
       where: params,
       select: {
         createdAt: true,
+        description: true,
         id: true,
+        name: true,
+        price: true,
         updatedAt: true,
       },
     });
@@ -77,9 +122,18 @@ export class RatePlanControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: RatePlan })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RatePlan",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateRatePlan(
     @common.Param() params: RatePlanWhereUniqueInput,
     @common.Body() data: RatePlanUpdateInput
@@ -90,7 +144,10 @@ export class RatePlanControllerBase {
         data: data,
         select: {
           createdAt: true,
+          description: true,
           id: true,
+          name: true,
+          price: true,
           updatedAt: true,
         },
       });
@@ -107,6 +164,14 @@ export class RatePlanControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: RatePlan })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RatePlan",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteRatePlan(
     @common.Param() params: RatePlanWhereUniqueInput
   ): Promise<RatePlan | null> {
@@ -115,7 +180,10 @@ export class RatePlanControllerBase {
         where: params,
         select: {
           createdAt: true,
+          description: true,
           id: true,
+          name: true,
+          price: true,
           updatedAt: true,
         },
       });

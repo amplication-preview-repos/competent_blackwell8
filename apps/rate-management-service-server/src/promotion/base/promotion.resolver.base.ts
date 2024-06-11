@@ -13,16 +13,34 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { Promotion } from "./Promotion";
 import { PromotionCountArgs } from "./PromotionCountArgs";
 import { PromotionFindManyArgs } from "./PromotionFindManyArgs";
 import { PromotionFindUniqueArgs } from "./PromotionFindUniqueArgs";
+import { CreatePromotionArgs } from "./CreatePromotionArgs";
+import { UpdatePromotionArgs } from "./UpdatePromotionArgs";
 import { DeletePromotionArgs } from "./DeletePromotionArgs";
 import { PromotionService } from "../promotion.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => Promotion)
 export class PromotionResolverBase {
-  constructor(protected readonly service: PromotionService) {}
+  constructor(
+    protected readonly service: PromotionService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "Promotion",
+    action: "read",
+    possession: "any",
+  })
   async _promotionsMeta(
     @graphql.Args() args: PromotionCountArgs
   ): Promise<MetaQueryPayload> {
@@ -32,14 +50,26 @@ export class PromotionResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [Promotion])
+  @nestAccessControl.UseRoles({
+    resource: "Promotion",
+    action: "read",
+    possession: "any",
+  })
   async promotions(
     @graphql.Args() args: PromotionFindManyArgs
   ): Promise<Promotion[]> {
     return this.service.promotions(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => Promotion, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "Promotion",
+    action: "read",
+    possession: "own",
+  })
   async promotion(
     @graphql.Args() args: PromotionFindUniqueArgs
   ): Promise<Promotion | null> {
@@ -50,7 +80,53 @@ export class PromotionResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Promotion)
+  @nestAccessControl.UseRoles({
+    resource: "Promotion",
+    action: "create",
+    possession: "any",
+  })
+  async createPromotion(
+    @graphql.Args() args: CreatePromotionArgs
+  ): Promise<Promotion> {
+    return await this.service.createPromotion({
+      ...args,
+      data: args.data,
+    });
+  }
+
+  @common.UseInterceptors(AclValidateRequestInterceptor)
+  @graphql.Mutation(() => Promotion)
+  @nestAccessControl.UseRoles({
+    resource: "Promotion",
+    action: "update",
+    possession: "any",
+  })
+  async updatePromotion(
+    @graphql.Args() args: UpdatePromotionArgs
+  ): Promise<Promotion | null> {
+    try {
+      return await this.service.updatePromotion({
+        ...args,
+        data: args.data,
+      });
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new GraphQLError(
+          `No resource was found for ${JSON.stringify(args.where)}`
+        );
+      }
+      throw error;
+    }
+  }
+
+  @graphql.Mutation(() => Promotion)
+  @nestAccessControl.UseRoles({
+    resource: "Promotion",
+    action: "delete",
+    possession: "any",
+  })
   async deletePromotion(
     @graphql.Args() args: DeletePromotionArgs
   ): Promise<Promotion | null> {

@@ -13,16 +13,34 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { Discount } from "./Discount";
 import { DiscountCountArgs } from "./DiscountCountArgs";
 import { DiscountFindManyArgs } from "./DiscountFindManyArgs";
 import { DiscountFindUniqueArgs } from "./DiscountFindUniqueArgs";
+import { CreateDiscountArgs } from "./CreateDiscountArgs";
+import { UpdateDiscountArgs } from "./UpdateDiscountArgs";
 import { DeleteDiscountArgs } from "./DeleteDiscountArgs";
 import { DiscountService } from "../discount.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => Discount)
 export class DiscountResolverBase {
-  constructor(protected readonly service: DiscountService) {}
+  constructor(
+    protected readonly service: DiscountService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "read",
+    possession: "any",
+  })
   async _discountsMeta(
     @graphql.Args() args: DiscountCountArgs
   ): Promise<MetaQueryPayload> {
@@ -32,14 +50,26 @@ export class DiscountResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [Discount])
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "read",
+    possession: "any",
+  })
   async discounts(
     @graphql.Args() args: DiscountFindManyArgs
   ): Promise<Discount[]> {
     return this.service.discounts(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => Discount, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "read",
+    possession: "own",
+  })
   async discount(
     @graphql.Args() args: DiscountFindUniqueArgs
   ): Promise<Discount | null> {
@@ -50,7 +80,53 @@ export class DiscountResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Discount)
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "create",
+    possession: "any",
+  })
+  async createDiscount(
+    @graphql.Args() args: CreateDiscountArgs
+  ): Promise<Discount> {
+    return await this.service.createDiscount({
+      ...args,
+      data: args.data,
+    });
+  }
+
+  @common.UseInterceptors(AclValidateRequestInterceptor)
+  @graphql.Mutation(() => Discount)
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "update",
+    possession: "any",
+  })
+  async updateDiscount(
+    @graphql.Args() args: UpdateDiscountArgs
+  ): Promise<Discount | null> {
+    try {
+      return await this.service.updateDiscount({
+        ...args,
+        data: args.data,
+      });
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new GraphQLError(
+          `No resource was found for ${JSON.stringify(args.where)}`
+        );
+      }
+      throw error;
+    }
+  }
+
+  @graphql.Mutation(() => Discount)
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "delete",
+    possession: "any",
+  })
   async deleteDiscount(
     @graphql.Args() args: DeleteDiscountArgs
   ): Promise<Discount | null> {

@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { DiscountService } from "../discount.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { DiscountCreateInput } from "./DiscountCreateInput";
 import { Discount } from "./Discount";
 import { DiscountFindManyArgs } from "./DiscountFindManyArgs";
 import { DiscountWhereUniqueInput } from "./DiscountWhereUniqueInput";
 import { DiscountUpdateInput } from "./DiscountUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class DiscountControllerBase {
-  constructor(protected readonly service: DiscountService) {}
+  constructor(
+    protected readonly service: DiscountService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Discount })
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createDiscount(
     @common.Body() data: DiscountCreateInput
   ): Promise<Discount> {
@@ -34,30 +52,58 @@ export class DiscountControllerBase {
       data: data,
       select: {
         createdAt: true,
+        description: true,
+        discountAmount: true,
+        endDate: true,
         id: true,
+        name: true,
+        startDate: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Discount] })
   @ApiNestedQuery(DiscountFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async discounts(@common.Req() request: Request): Promise<Discount[]> {
     const args = plainToClass(DiscountFindManyArgs, request.query);
     return this.service.discounts({
       ...args,
       select: {
         createdAt: true,
+        description: true,
+        discountAmount: true,
+        endDate: true,
         id: true,
+        name: true,
+        startDate: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Discount })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async discount(
     @common.Param() params: DiscountWhereUniqueInput
   ): Promise<Discount | null> {
@@ -65,7 +111,12 @@ export class DiscountControllerBase {
       where: params,
       select: {
         createdAt: true,
+        description: true,
+        discountAmount: true,
+        endDate: true,
         id: true,
+        name: true,
+        startDate: true,
         updatedAt: true,
       },
     });
@@ -77,9 +128,18 @@ export class DiscountControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Discount })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateDiscount(
     @common.Param() params: DiscountWhereUniqueInput,
     @common.Body() data: DiscountUpdateInput
@@ -90,7 +150,12 @@ export class DiscountControllerBase {
         data: data,
         select: {
           createdAt: true,
+          description: true,
+          discountAmount: true,
+          endDate: true,
           id: true,
+          name: true,
+          startDate: true,
           updatedAt: true,
         },
       });
@@ -107,6 +172,14 @@ export class DiscountControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Discount })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Discount",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteDiscount(
     @common.Param() params: DiscountWhereUniqueInput
   ): Promise<Discount | null> {
@@ -115,7 +188,12 @@ export class DiscountControllerBase {
         where: params,
         select: {
           createdAt: true,
+          description: true,
+          discountAmount: true,
+          endDate: true,
           id: true,
+          name: true,
+          startDate: true,
           updatedAt: true,
         },
       });
