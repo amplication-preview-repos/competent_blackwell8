@@ -13,8 +13,11 @@ export const PerformanceMetricList = (props: ListProps): React.ReactElement => {
     >
       <Datagrid rowClick="show">
         <DateField source="createdAt" label="Created At" />
+        <TextField label="date" source="date" />
         <TextField label="ID" source="id" />
+        <TextField label="metricName" source="metricName" />
         <DateField source="updatedAt" label="Updated At" />
+        <TextField label="value" source="value" />
       </Datagrid>
     </List>
   );

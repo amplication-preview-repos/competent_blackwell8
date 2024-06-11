@@ -16,46 +16,88 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { ReportService } from "../report.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { ReportCreateInput } from "./ReportCreateInput";
 import { Report } from "./Report";
 import { ReportFindManyArgs } from "./ReportFindManyArgs";
 import { ReportWhereUniqueInput } from "./ReportWhereUniqueInput";
 import { ReportUpdateInput } from "./ReportUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class ReportControllerBase {
-  constructor(protected readonly service: ReportService) {}
+  constructor(
+    protected readonly service: ReportService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Report })
+  @nestAccessControl.UseRoles({
+    resource: "Report",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createReport(@common.Body() data: ReportCreateInput): Promise<Report> {
     return await this.service.createReport({
       data: data,
       select: {
         createdAt: true,
+        data: true,
         id: true,
+        name: true,
+        typeField: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Report] })
   @ApiNestedQuery(ReportFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Report",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async reports(@common.Req() request: Request): Promise<Report[]> {
     const args = plainToClass(ReportFindManyArgs, request.query);
     return this.service.reports({
       ...args,
       select: {
         createdAt: true,
+        data: true,
         id: true,
+        name: true,
+        typeField: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Report })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Report",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async report(
     @common.Param() params: ReportWhereUniqueInput
   ): Promise<Report | null> {
@@ -63,7 +105,10 @@ export class ReportControllerBase {
       where: params,
       select: {
         createdAt: true,
+        data: true,
         id: true,
+        name: true,
+        typeField: true,
         updatedAt: true,
       },
     });
@@ -75,9 +120,18 @@ export class ReportControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Report })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Report",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateReport(
     @common.Param() params: ReportWhereUniqueInput,
     @common.Body() data: ReportUpdateInput
@@ -88,7 +142,10 @@ export class ReportControllerBase {
         data: data,
         select: {
           createdAt: true,
+          data: true,
           id: true,
+          name: true,
+          typeField: true,
           updatedAt: true,
         },
       });
@@ -105,6 +162,14 @@ export class ReportControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Report })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Report",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteReport(
     @common.Param() params: ReportWhereUniqueInput
   ): Promise<Report | null> {
@@ -113,7 +178,10 @@ export class ReportControllerBase {
         where: params,
         select: {
           createdAt: true,
+          data: true,
           id: true,
+          name: true,
+          typeField: true,
           updatedAt: true,
         },
       });

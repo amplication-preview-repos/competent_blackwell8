@@ -17,6 +17,10 @@ import { PerformanceMetricList } from "./performanceMetric/PerformanceMetricList
 import { PerformanceMetricCreate } from "./performanceMetric/PerformanceMetricCreate";
 import { PerformanceMetricEdit } from "./performanceMetric/PerformanceMetricEdit";
 import { PerformanceMetricShow } from "./performanceMetric/PerformanceMetricShow";
+import { UserList } from "./user/UserList";
+import { UserCreate } from "./user/UserCreate";
+import { UserEdit } from "./user/UserEdit";
+import { UserShow } from "./user/UserShow";
 import { jwtAuthProvider } from "./auth-provider/ra-auth-jwt";
 
 const App = (): React.ReactElement => {
@@ -63,6 +67,13 @@ const App = (): React.ReactElement => {
           edit={PerformanceMetricEdit}
           create={PerformanceMetricCreate}
           show={PerformanceMetricShow}
+        />
+        <Resource
+          name="User"
+          list={UserList}
+          edit={UserEdit}
+          create={UserCreate}
+          show={UserShow}
         />
       </Admin>
     </div>

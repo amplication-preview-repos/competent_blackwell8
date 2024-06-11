@@ -39,6 +39,17 @@ class PerformanceMetricOrderByInput {
   @Field(() => SortOrder, {
     nullable: true,
   })
+  date?: SortOrder;
+
+  @ApiProperty({
+    required: false,
+    enum: ["asc", "desc"],
+  })
+  @IsOptional()
+  @IsEnum(SortOrder)
+  @Field(() => SortOrder, {
+    nullable: true,
+  })
   id?: SortOrder;
 
   @ApiProperty({
@@ -50,7 +61,29 @@ class PerformanceMetricOrderByInput {
   @Field(() => SortOrder, {
     nullable: true,
   })
+  metricName?: SortOrder;
+
+  @ApiProperty({
+    required: false,
+    enum: ["asc", "desc"],
+  })
+  @IsOptional()
+  @IsEnum(SortOrder)
+  @Field(() => SortOrder, {
+    nullable: true,
+  })
   updatedAt?: SortOrder;
+
+  @ApiProperty({
+    required: false,
+    enum: ["asc", "desc"],
+  })
+  @IsOptional()
+  @IsEnum(SortOrder)
+  @Field(() => SortOrder, {
+    nullable: true,
+  })
+  value?: SortOrder;
 }
 
 export { PerformanceMetricOrderByInput as PerformanceMetricOrderByInput };

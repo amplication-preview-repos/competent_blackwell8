@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { PerformanceMetricService } from "../performanceMetric.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { PerformanceMetricCreateInput } from "./PerformanceMetricCreateInput";
 import { PerformanceMetric } from "./PerformanceMetric";
 import { PerformanceMetricFindManyArgs } from "./PerformanceMetricFindManyArgs";
 import { PerformanceMetricWhereUniqueInput } from "./PerformanceMetricWhereUniqueInput";
 import { PerformanceMetricUpdateInput } from "./PerformanceMetricUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class PerformanceMetricControllerBase {
-  constructor(protected readonly service: PerformanceMetricService) {}
+  constructor(
+    protected readonly service: PerformanceMetricService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: PerformanceMetric })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createPerformanceMetric(
     @common.Body() data: PerformanceMetricCreateInput
   ): Promise<PerformanceMetric> {
@@ -34,15 +52,27 @@ export class PerformanceMetricControllerBase {
       data: data,
       select: {
         createdAt: true,
+        date: true,
         id: true,
+        metricName: true,
         updatedAt: true,
+        value: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [PerformanceMetric] })
   @ApiNestedQuery(PerformanceMetricFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async performanceMetrics(
     @common.Req() request: Request
   ): Promise<PerformanceMetric[]> {
@@ -51,15 +81,27 @@ export class PerformanceMetricControllerBase {
       ...args,
       select: {
         createdAt: true,
+        date: true,
         id: true,
+        metricName: true,
         updatedAt: true,
+        value: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: PerformanceMetric })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async performanceMetric(
     @common.Param() params: PerformanceMetricWhereUniqueInput
   ): Promise<PerformanceMetric | null> {
@@ -67,8 +109,11 @@ export class PerformanceMetricControllerBase {
       where: params,
       select: {
         createdAt: true,
+        date: true,
         id: true,
+        metricName: true,
         updatedAt: true,
+        value: true,
       },
     });
     if (result === null) {
@@ -79,9 +124,18 @@ export class PerformanceMetricControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: PerformanceMetric })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updatePerformanceMetric(
     @common.Param() params: PerformanceMetricWhereUniqueInput,
     @common.Body() data: PerformanceMetricUpdateInput
@@ -92,8 +146,11 @@ export class PerformanceMetricControllerBase {
         data: data,
         select: {
           createdAt: true,
+          date: true,
           id: true,
+          metricName: true,
           updatedAt: true,
+          value: true,
         },
       });
     } catch (error) {
@@ -109,6 +166,14 @@ export class PerformanceMetricControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: PerformanceMetric })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deletePerformanceMetric(
     @common.Param() params: PerformanceMetricWhereUniqueInput
   ): Promise<PerformanceMetric | null> {
@@ -117,8 +182,11 @@ export class PerformanceMetricControllerBase {
         where: params,
         select: {
           createdAt: true,
+          date: true,
           id: true,
+          metricName: true,
           updatedAt: true,
+          value: true,
         },
       });
     } catch (error) {

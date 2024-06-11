@@ -12,8 +12,11 @@ export const PerformanceMetricShow = (props: ShowProps): React.ReactElement => {
     <Show {...props}>
       <SimpleShowLayout>
         <DateField source="createdAt" label="Created At" />
+        <TextField label="date" source="date" />
         <TextField label="ID" source="id" />
+        <TextField label="metricName" source="metricName" />
         <DateField source="updatedAt" label="Updated At" />
+        <TextField label="value" source="value" />
       </SimpleShowLayout>
     </Show>
   );

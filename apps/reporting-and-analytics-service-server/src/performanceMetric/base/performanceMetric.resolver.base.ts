@@ -13,16 +13,34 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { PerformanceMetric } from "./PerformanceMetric";
 import { PerformanceMetricCountArgs } from "./PerformanceMetricCountArgs";
 import { PerformanceMetricFindManyArgs } from "./PerformanceMetricFindManyArgs";
 import { PerformanceMetricFindUniqueArgs } from "./PerformanceMetricFindUniqueArgs";
+import { CreatePerformanceMetricArgs } from "./CreatePerformanceMetricArgs";
+import { UpdatePerformanceMetricArgs } from "./UpdatePerformanceMetricArgs";
 import { DeletePerformanceMetricArgs } from "./DeletePerformanceMetricArgs";
 import { PerformanceMetricService } from "../performanceMetric.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => PerformanceMetric)
 export class PerformanceMetricResolverBase {
-  constructor(protected readonly service: PerformanceMetricService) {}
+  constructor(
+    protected readonly service: PerformanceMetricService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "read",
+    possession: "any",
+  })
   async _performanceMetricsMeta(
     @graphql.Args() args: PerformanceMetricCountArgs
   ): Promise<MetaQueryPayload> {
@@ -32,14 +50,26 @@ export class PerformanceMetricResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [PerformanceMetric])
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "read",
+    possession: "any",
+  })
   async performanceMetrics(
     @graphql.Args() args: PerformanceMetricFindManyArgs
   ): Promise<PerformanceMetric[]> {
     return this.service.performanceMetrics(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => PerformanceMetric, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "read",
+    possession: "own",
+  })
   async performanceMetric(
     @graphql.Args() args: PerformanceMetricFindUniqueArgs
   ): Promise<PerformanceMetric | null> {
@@ -50,7 +80,53 @@ export class PerformanceMetricResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => PerformanceMetric)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "create",
+    possession: "any",
+  })
+  async createPerformanceMetric(
+    @graphql.Args() args: CreatePerformanceMetricArgs
+  ): Promise<PerformanceMetric> {
+    return await this.service.createPerformanceMetric({
+      ...args,
+      data: args.data,
+    });
+  }
+
+  @common.UseInterceptors(AclValidateRequestInterceptor)
+  @graphql.Mutation(() => PerformanceMetric)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "update",
+    possession: "any",
+  })
+  async updatePerformanceMetric(
+    @graphql.Args() args: UpdatePerformanceMetricArgs
+  ): Promise<PerformanceMetric | null> {
+    try {
+      return await this.service.updatePerformanceMetric({
+        ...args,
+        data: args.data,
+      });
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new GraphQLError(
+          `No resource was found for ${JSON.stringify(args.where)}`
+        );
+      }
+      throw error;
+    }
+  }
+
+  @graphql.Mutation(() => PerformanceMetric)
+  @nestAccessControl.UseRoles({
+    resource: "PerformanceMetric",
+    action: "delete",
+    possession: "any",
+  })
   async deletePerformanceMetric(
     @graphql.Args() args: DeletePerformanceMetricArgs
   ): Promise<PerformanceMetric | null> {

@@ -16,55 +16,97 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { RevenueService } from "../revenue.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { RevenueCreateInput } from "./RevenueCreateInput";
 import { Revenue } from "./Revenue";
 import { RevenueFindManyArgs } from "./RevenueFindManyArgs";
 import { RevenueWhereUniqueInput } from "./RevenueWhereUniqueInput";
 import { RevenueUpdateInput } from "./RevenueUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class RevenueControllerBase {
-  constructor(protected readonly service: RevenueService) {}
+  constructor(
+    protected readonly service: RevenueService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Revenue })
+  @nestAccessControl.UseRoles({
+    resource: "Revenue",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createRevenue(
     @common.Body() data: RevenueCreateInput
   ): Promise<Revenue> {
     return await this.service.createRevenue({
       data: data,
       select: {
+        amount: true,
         createdAt: true,
+        date: true,
         id: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Revenue] })
   @ApiNestedQuery(RevenueFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Revenue",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async revenues(@common.Req() request: Request): Promise<Revenue[]> {
     const args = plainToClass(RevenueFindManyArgs, request.query);
     return this.service.revenues({
       ...args,
       select: {
+        amount: true,
         createdAt: true,
+        date: true,
         id: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Revenue })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Revenue",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async revenue(
     @common.Param() params: RevenueWhereUniqueInput
   ): Promise<Revenue | null> {
     const result = await this.service.revenue({
       where: params,
       select: {
+        amount: true,
         createdAt: true,
+        date: true,
         id: true,
         updatedAt: true,
       },
@@ -77,9 +119,18 @@ export class RevenueControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Revenue })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Revenue",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateRevenue(
     @common.Param() params: RevenueWhereUniqueInput,
     @common.Body() data: RevenueUpdateInput
@@ -89,7 +140,9 @@ export class RevenueControllerBase {
         where: params,
         data: data,
         select: {
+          amount: true,
           createdAt: true,
+          date: true,
           id: true,
           updatedAt: true,
         },
@@ -107,6 +160,14 @@ export class RevenueControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Revenue })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Revenue",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteRevenue(
     @common.Param() params: RevenueWhereUniqueInput
   ): Promise<Revenue | null> {
@@ -114,7 +175,9 @@ export class RevenueControllerBase {
       return await this.service.deleteRevenue({
         where: params,
         select: {
+          amount: true,
           createdAt: true,
+          date: true,
           id: true,
           updatedAt: true,
         },
