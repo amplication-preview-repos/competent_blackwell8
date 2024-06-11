@@ -18,24 +18,36 @@ import { BookingService } from "../booking.service";
 const nonExistingId = "nonExistingId";
 const existingId = "existingId";
 const CREATE_INPUT = {
+  checkInDate: new Date(),
+  checkOutDate: new Date(),
   createdAt: new Date(),
+  customerName: "exampleCustomerName",
   id: "exampleId",
   updatedAt: new Date(),
 };
 const CREATE_RESULT = {
+  checkInDate: new Date(),
+  checkOutDate: new Date(),
   createdAt: new Date(),
+  customerName: "exampleCustomerName",
   id: "exampleId",
   updatedAt: new Date(),
 };
 const FIND_MANY_RESULT = [
   {
+    checkInDate: new Date(),
+    checkOutDate: new Date(),
     createdAt: new Date(),
+    customerName: "exampleCustomerName",
     id: "exampleId",
     updatedAt: new Date(),
   },
 ];
 const FIND_ONE_RESULT = {
+  checkInDate: new Date(),
+  checkOutDate: new Date(),
   createdAt: new Date(),
+  customerName: "exampleCustomerName",
   id: "exampleId",
   updatedAt: new Date(),
 };
@@ -122,6 +134,8 @@ describe("Booking", () => {
       .expect(HttpStatus.CREATED)
       .expect({
         ...CREATE_RESULT,
+        checkInDate: CREATE_RESULT.checkInDate.toISOString(),
+        checkOutDate: CREATE_RESULT.checkOutDate.toISOString(),
         createdAt: CREATE_RESULT.createdAt.toISOString(),
         updatedAt: CREATE_RESULT.updatedAt.toISOString(),
       });
@@ -134,6 +148,8 @@ describe("Booking", () => {
       .expect([
         {
           ...FIND_MANY_RESULT[0],
+          checkInDate: FIND_MANY_RESULT[0].checkInDate.toISOString(),
+          checkOutDate: FIND_MANY_RESULT[0].checkOutDate.toISOString(),
           createdAt: FIND_MANY_RESULT[0].createdAt.toISOString(),
           updatedAt: FIND_MANY_RESULT[0].updatedAt.toISOString(),
         },
@@ -157,6 +173,8 @@ describe("Booking", () => {
       .expect(HttpStatus.OK)
       .expect({
         ...FIND_ONE_RESULT,
+        checkInDate: FIND_ONE_RESULT.checkInDate.toISOString(),
+        checkOutDate: FIND_ONE_RESULT.checkOutDate.toISOString(),
         createdAt: FIND_ONE_RESULT.createdAt.toISOString(),
         updatedAt: FIND_ONE_RESULT.updatedAt.toISOString(),
       });
@@ -170,6 +188,8 @@ describe("Booking", () => {
       .expect(HttpStatus.CREATED)
       .expect({
         ...CREATE_RESULT,
+        checkInDate: CREATE_RESULT.checkInDate.toISOString(),
+        checkOutDate: CREATE_RESULT.checkOutDate.toISOString(),
         createdAt: CREATE_RESULT.createdAt.toISOString(),
         updatedAt: CREATE_RESULT.updatedAt.toISOString(),
       })

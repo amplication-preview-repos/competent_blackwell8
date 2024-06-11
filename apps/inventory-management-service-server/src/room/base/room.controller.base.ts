@@ -16,54 +16,102 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { RoomService } from "../room.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { RoomCreateInput } from "./RoomCreateInput";
 import { Room } from "./Room";
 import { RoomFindManyArgs } from "./RoomFindManyArgs";
 import { RoomWhereUniqueInput } from "./RoomWhereUniqueInput";
 import { RoomUpdateInput } from "./RoomUpdateInput";
+import { BookingFindManyArgs } from "../../booking/base/BookingFindManyArgs";
+import { Booking } from "../../booking/base/Booking";
+import { BookingWhereUniqueInput } from "../../booking/base/BookingWhereUniqueInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class RoomControllerBase {
-  constructor(protected readonly service: RoomService) {}
+  constructor(
+    protected readonly service: RoomService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Room })
+  @nestAccessControl.UseRoles({
+    resource: "Room",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createRoom(@common.Body() data: RoomCreateInput): Promise<Room> {
     return await this.service.createRoom({
       data: data,
       select: {
+        capacity: true,
         createdAt: true,
+        floor: true,
         id: true,
+        numberField: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Room] })
   @ApiNestedQuery(RoomFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Room",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async rooms(@common.Req() request: Request): Promise<Room[]> {
     const args = plainToClass(RoomFindManyArgs, request.query);
     return this.service.rooms({
       ...args,
       select: {
+        capacity: true,
         createdAt: true,
+        floor: true,
         id: true,
+        numberField: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Room })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Room",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async room(
     @common.Param() params: RoomWhereUniqueInput
   ): Promise<Room | null> {
     const result = await this.service.room({
       where: params,
       select: {
+        capacity: true,
         createdAt: true,
+        floor: true,
         id: true,
+        numberField: true,
         updatedAt: true,
       },
     });
@@ -75,9 +123,18 @@ export class RoomControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Room })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Room",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateRoom(
     @common.Param() params: RoomWhereUniqueInput,
     @common.Body() data: RoomUpdateInput
@@ -87,8 +144,11 @@ export class RoomControllerBase {
         where: params,
         data: data,
         select: {
+          capacity: true,
           createdAt: true,
+          floor: true,
           id: true,
+          numberField: true,
           updatedAt: true,
         },
       });
@@ -105,6 +165,14 @@ export class RoomControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Room })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Room",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteRoom(
     @common.Param() params: RoomWhereUniqueInput
   ): Promise<Room | null> {
@@ -112,8 +180,11 @@ export class RoomControllerBase {
       return await this.service.deleteRoom({
         where: params,
         select: {
+          capacity: true,
           createdAt: true,
+          floor: true,
           id: true,
+          numberField: true,
           updatedAt: true,
         },
       });
@@ -125,5 +196,110 @@ export class RoomControllerBase {
       }
       throw error;
     }
+  }
+
+  @common.UseInterceptors(AclFilterResponseInterceptor)
+  @common.Get("/:id/bookings")
+  @ApiNestedQuery(BookingFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Booking",
+    action: "read",
+    possession: "any",
+  })
+  async findBookings(
+    @common.Req() request: Request,
+    @common.Param() params: RoomWhereUniqueInput
+  ): Promise<Booking[]> {
+    const query = plainToClass(BookingFindManyArgs, request.query);
+    const results = await this.service.findBookings(params.id, {
+      ...query,
+      select: {
+        checkInDate: true,
+        checkOutDate: true,
+        createdAt: true,
+        customerName: true,
+        id: true,
+
+        room: {
+          select: {
+            id: true,
+          },
+        },
+
+        updatedAt: true,
+      },
+    });
+    if (results === null) {
+      throw new errors.NotFoundException(
+        `No resource was found for ${JSON.stringify(params)}`
+      );
+    }
+    return results;
+  }
+
+  @common.Post("/:id/bookings")
+  @nestAccessControl.UseRoles({
+    resource: "Room",
+    action: "update",
+    possession: "any",
+  })
+  async connectBookings(
+    @common.Param() params: RoomWhereUniqueInput,
+    @common.Body() body: BookingWhereUniqueInput[]
+  ): Promise<void> {
+    const data = {
+      bookings: {
+        connect: body,
+      },
+    };
+    await this.service.updateRoom({
+      where: params,
+      data,
+      select: { id: true },
+    });
+  }
+
+  @common.Patch("/:id/bookings")
+  @nestAccessControl.UseRoles({
+    resource: "Room",
+    action: "update",
+    possession: "any",
+  })
+  async updateBookings(
+    @common.Param() params: RoomWhereUniqueInput,
+    @common.Body() body: BookingWhereUniqueInput[]
+  ): Promise<void> {
+    const data = {
+      bookings: {
+        set: body,
+      },
+    };
+    await this.service.updateRoom({
+      where: params,
+      data,
+      select: { id: true },
+    });
+  }
+
+  @common.Delete("/:id/bookings")
+  @nestAccessControl.UseRoles({
+    resource: "Room",
+    action: "update",
+    possession: "any",
+  })
+  async disconnectBookings(
+    @common.Param() params: RoomWhereUniqueInput,
+    @common.Body() body: BookingWhereUniqueInput[]
+  ): Promise<void> {
+    const data = {
+      bookings: {
+        disconnect: body,
+      },
+    };
+    await this.service.updateRoom({
+      where: params,
+      data,
+      select: { id: true },
+    });
   }
 }

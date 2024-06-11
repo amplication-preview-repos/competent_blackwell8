@@ -11,11 +11,38 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { ObjectType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDate, IsString } from "class-validator";
+import { Booking } from "../../booking/base/Booking";
+import {
+  ValidateNested,
+  IsOptional,
+  IsInt,
+  IsDate,
+  IsString,
+} from "class-validator";
 import { Type } from "class-transformer";
 
 @ObjectType()
 class Room {
+  @ApiProperty({
+    required: false,
+    type: () => [Booking],
+  })
+  @ValidateNested()
+  @Type(() => Booking)
+  @IsOptional()
+  bookings?: Array<Booking>;
+
+  @ApiProperty({
+    required: false,
+    type: Number,
+  })
+  @IsInt()
+  @IsOptional()
+  @Field(() => Number, {
+    nullable: true,
+  })
+  capacity!: number | null;
+
   @ApiProperty({
     required: true,
   })
@@ -25,12 +52,34 @@ class Room {
   createdAt!: Date;
 
   @ApiProperty({
+    required: false,
+    type: Number,
+  })
+  @IsInt()
+  @IsOptional()
+  @Field(() => Number, {
+    nullable: true,
+  })
+  floor!: number | null;
+
+  @ApiProperty({
     required: true,
     type: String,
   })
   @IsString()
   @Field(() => String)
   id!: string;
+
+  @ApiProperty({
+    required: false,
+    type: Number,
+  })
+  @IsInt()
+  @IsOptional()
+  @Field(() => Number, {
+    nullable: true,
+  })
+  numberField!: number | null;
 
   @ApiProperty({
     required: true,

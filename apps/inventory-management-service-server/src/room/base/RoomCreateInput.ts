@@ -9,5 +9,58 @@ https://docs.amplication.com/how-to/custom-code
 
 ------------------------------------------------------------------------------
   */
-class RoomCreateInput {}
+import { InputType, Field } from "@nestjs/graphql";
+import { ApiProperty } from "@nestjs/swagger";
+import { BookingCreateNestedManyWithoutRoomsInput } from "./BookingCreateNestedManyWithoutRoomsInput";
+import { ValidateNested, IsOptional, IsInt } from "class-validator";
+import { Type } from "class-transformer";
+
+@InputType()
+class RoomCreateInput {
+  @ApiProperty({
+    required: false,
+    type: () => BookingCreateNestedManyWithoutRoomsInput,
+  })
+  @ValidateNested()
+  @Type(() => BookingCreateNestedManyWithoutRoomsInput)
+  @IsOptional()
+  @Field(() => BookingCreateNestedManyWithoutRoomsInput, {
+    nullable: true,
+  })
+  bookings?: BookingCreateNestedManyWithoutRoomsInput;
+
+  @ApiProperty({
+    required: false,
+    type: Number,
+  })
+  @IsInt()
+  @IsOptional()
+  @Field(() => Number, {
+    nullable: true,
+  })
+  capacity?: number | null;
+
+  @ApiProperty({
+    required: false,
+    type: Number,
+  })
+  @IsInt()
+  @IsOptional()
+  @Field(() => Number, {
+    nullable: true,
+  })
+  floor?: number | null;
+
+  @ApiProperty({
+    required: false,
+    type: Number,
+  })
+  @IsInt()
+  @IsOptional()
+  @Field(() => Number, {
+    nullable: true,
+  })
+  numberField?: number | null;
+}
+
 export { RoomCreateInput as RoomCreateInput };

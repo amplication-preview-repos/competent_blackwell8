@@ -18,25 +18,37 @@ import { RoomService } from "../room.service";
 const nonExistingId = "nonExistingId";
 const existingId = "existingId";
 const CREATE_INPUT = {
+  capacity: 42,
   createdAt: new Date(),
+  floor: 42,
   id: "exampleId",
+  numberField: 42,
   updatedAt: new Date(),
 };
 const CREATE_RESULT = {
+  capacity: 42,
   createdAt: new Date(),
+  floor: 42,
   id: "exampleId",
+  numberField: 42,
   updatedAt: new Date(),
 };
 const FIND_MANY_RESULT = [
   {
+    capacity: 42,
     createdAt: new Date(),
+    floor: 42,
     id: "exampleId",
+    numberField: 42,
     updatedAt: new Date(),
   },
 ];
 const FIND_ONE_RESULT = {
+  capacity: 42,
   createdAt: new Date(),
+  floor: 42,
   id: "exampleId",
+  numberField: 42,
   updatedAt: new Date(),
 };
 

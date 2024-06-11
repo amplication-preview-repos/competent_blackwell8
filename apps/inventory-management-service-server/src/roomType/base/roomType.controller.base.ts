@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { RoomTypeService } from "../roomType.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { RoomTypeCreateInput } from "./RoomTypeCreateInput";
 import { RoomType } from "./RoomType";
 import { RoomTypeFindManyArgs } from "./RoomTypeFindManyArgs";
 import { RoomTypeWhereUniqueInput } from "./RoomTypeWhereUniqueInput";
 import { RoomTypeUpdateInput } from "./RoomTypeUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class RoomTypeControllerBase {
-  constructor(protected readonly service: RoomTypeService) {}
+  constructor(
+    protected readonly service: RoomTypeService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: RoomType })
+  @nestAccessControl.UseRoles({
+    resource: "RoomType",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createRoomType(
     @common.Body() data: RoomTypeCreateInput
   ): Promise<RoomType> {
@@ -34,30 +52,54 @@ export class RoomTypeControllerBase {
       data: data,
       select: {
         createdAt: true,
+        description: true,
         id: true,
+        rate: true,
+        typeName: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [RoomType] })
   @ApiNestedQuery(RoomTypeFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "RoomType",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async roomTypes(@common.Req() request: Request): Promise<RoomType[]> {
     const args = plainToClass(RoomTypeFindManyArgs, request.query);
     return this.service.roomTypes({
       ...args,
       select: {
         createdAt: true,
+        description: true,
         id: true,
+        rate: true,
+        typeName: true,
         updatedAt: true,
       },
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: RoomType })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RoomType",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async roomType(
     @common.Param() params: RoomTypeWhereUniqueInput
   ): Promise<RoomType | null> {
@@ -65,7 +107,10 @@ export class RoomTypeControllerBase {
       where: params,
       select: {
         createdAt: true,
+        description: true,
         id: true,
+        rate: true,
+        typeName: true,
         updatedAt: true,
       },
     });
@@ -77,9 +122,18 @@ export class RoomTypeControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: RoomType })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RoomType",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateRoomType(
     @common.Param() params: RoomTypeWhereUniqueInput,
     @common.Body() data: RoomTypeUpdateInput
@@ -90,7 +144,10 @@ export class RoomTypeControllerBase {
         data: data,
         select: {
           createdAt: true,
+          description: true,
           id: true,
+          rate: true,
+          typeName: true,
           updatedAt: true,
         },
       });
@@ -107,6 +164,14 @@ export class RoomTypeControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: RoomType })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "RoomType",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteRoomType(
     @common.Param() params: RoomTypeWhereUniqueInput
   ): Promise<RoomType | null> {
@@ -115,7 +180,10 @@ export class RoomTypeControllerBase {
         where: params,
         select: {
           createdAt: true,
+          description: true,
           id: true,
+          rate: true,
+          typeName: true,
           updatedAt: true,
         },
       });
